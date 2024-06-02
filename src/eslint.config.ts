@@ -8,42 +8,68 @@ import tsdoc from "eslint-plugin-tsdoc"
 import unicorn from "eslint-plugin-unicorn"
 import ts from "typescript-eslint"
 
-const unused = {
-	vars: "all",
-	args: "all",
-	caughtErrors: "all",
-	varsIgnorePattern: "^_",
-	argsIgnorePattern: "^_",
-	destructuredArrayIgnorePattern: "^_",
-}
-
 export interface Options {
-	src?: string[]
 	target?: string[]
 	ignore?: string[]
+	root?: string
 }
 
 export function config(
-	{
-		src = ["src", "test"],
-		target = ["target", "dist"],
-		ignore = [],
-	}: Options = {},
+	{ target = ["target", "dist"], ignore = [], root }: Options = {},
 	...configs: ts.ConfigWithExtends[]
 ) {
 	return ts.config(
 		{
-			ignores: [...target, ...ignore, "node_modules"].map((dir) => `${dir}/**`),
+			ignores: [
+				"node_modules/**",
+				...ignore,
+				...target.map((dir) => {
+					if (dir.endsWith("/")) {
+						dir = dir.slice(0, -1)
+					}
+					return `${dir}/**`
+				}),
+			],
 		},
 		{
-			files: ["**/*.ts", "**/*.js"],
-			extends: [js.configs.recommended],
-			plugins: { imports, unicorn },
+			files: ["**/*.ts", "**/*.js", "**/*.tsx", "**/*.jsx"],
+			extends: [
+				js.configs.recommended,
+				...ts.configs.stylisticTypeChecked,
+				...ts.configs.strictTypeChecked,
+			],
+			plugins: { imports, deprecation, tsdoc, unicorn },
+			languageOptions: {
+				parserOptions: {
+					EXPERIMENTAL_useProjectService: {
+						defaultProject: "./tsconfig.json",
+						allowDefaultProjectForFiles: ["./*.js"],
+					} as unknown as boolean,
+					tsconfigRootDir: root,
+				},
+			},
 			rules: {
-				"no-unused-vars": ["warn", unused],
-
 				"imports/imports": "warn",
 				"imports/exports": "warn",
+				"deprecation/deprecation": "error",
+				"tsdoc/syntax": "error",
+
+				"@typescript-eslint/consistent-type-imports": [
+					"error",
+					{ prefer: "type-imports", fixStyle: "separate-type-imports" },
+				],
+				"@typescript-eslint/no-non-null-assertion": "off",
+				"@typescript-eslint/no-unused-vars": [
+					"warn",
+					{
+						vars: "all",
+						args: "all",
+						caughtErrors: "all",
+						varsIgnorePattern: "^_",
+						argsIgnorePattern: "^_",
+						destructuredArrayIgnorePattern: "^_",
+					},
+				],
 
 				"unicorn/better-regex": "warn",
 				"unicorn/consistent-empty-array-spread": "error",
@@ -128,34 +154,6 @@ export function config(
 			rules: {
 				...a11y.configs.strict.rules,
 				...hooks.configs.recommended.rules,
-			},
-		},
-		{
-			files: [
-				"**/*.ts",
-				"**/*.tsx",
-				...src.flatMap((dir) => [`${dir}/**/*.js`, `${dir}/**/*.jsx`]),
-			],
-			extends: [
-				...ts.configs.stylisticTypeChecked,
-				...ts.configs.strictTypeChecked,
-			],
-			plugins: { deprecation, tsdoc },
-			languageOptions: {
-				parserOptions: {
-					EXPERIMENTAL_useProjectService: true,
-				},
-			},
-			rules: {
-				"deprecation/deprecation": "error",
-				"tsdoc/syntax": "error",
-
-				"@typescript-eslint/consistent-type-imports": [
-					"error",
-					{ prefer: "type-imports", fixStyle: "separate-type-imports" },
-				],
-				"@typescript-eslint/no-non-null-assertion": "off",
-				"@typescript-eslint/no-unused-vars": ["warn", unused],
 			},
 		},
 		...configs,
