@@ -237,6 +237,7 @@ export function config(
 					"warn",
 					{
 						publicOnly: true,
+						enableFixer: false,
 						contexts: [
 							"ExportNamedDeclaration[declaration]",
 							"ExportDefaultDeclaration",
