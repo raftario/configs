@@ -8,26 +8,35 @@ import imports from "eslint-plugin-simple-import-sort"
 import unicorn from "eslint-plugin-unicorn"
 import ts from "typescript-eslint"
 
-/**
- * Options for the {@link config} function
- */
-export interface Options {
-	targets?: string[]
-	ignores?: string[]
-	root?: string
+function dir(path: string) {
+	if (path.endsWith("/")) {
+		path = path.slice(0, -1)
+	}
+	return path
 }
 
 /**
  * Generates an opinionated ESLint configuration for TypeScript projects
  *
  * @param options
- * @param options.targets - Target directories for `tsc` output
+ * @param options.sources - Source directories for library code
+ * @param options.targets - Target directories for compiler output
  * @param options.ignores - Patterns to ignore
  * @param options.root - Project root, usually `import.meta.dirname`
  * @param configs - Additional configs to extend
  */
 export function config(
-	{ targets = ["target", "dist"], ignores = [], root }: Options = {},
+	{
+		sources = ["src"],
+		targets = ["target", "dist", "out"],
+		ignores = [],
+		root,
+	}: {
+		sources?: string[]
+		targets?: string[]
+		ignores?: string[]
+		root?: string
+	} = {},
 	...configs: ts.ConfigWithExtends[]
 ) {
 	return ts.config(
@@ -35,12 +44,7 @@ export function config(
 			ignores: [
 				"node_modules/**",
 				...ignores,
-				...targets.map((dir) => {
-					if (dir.endsWith("/")) {
-						dir = dir.slice(0, -1)
-					}
-					return `${dir}/**`
-				}),
+				...targets.map((t) => `${dir(t)}/**`),
 			],
 		},
 		{
@@ -103,16 +107,6 @@ export function config(
 				"jsdoc/no-multi-asterisks": "error",
 				"jsdoc/no-types": "error",
 				"jsdoc/require-asterisk-prefix": "error",
-				"jsdoc/require-jsdoc": [
-					"warn",
-					{
-						publicOnly: true,
-						contexts: [
-							"ExportNamedDeclaration[declaration]",
-							"ExportDefaultDeclaration",
-						],
-					},
-				],
 				"jsdoc/require-returns-check": "error",
 				"jsdoc/require-yields-check": "error",
 				"jsdoc/sort-tags": [
@@ -232,6 +226,23 @@ export function config(
 			rules: {
 				...a11y.configs.strict.rules,
 				...hooks.configs.recommended.rules,
+			},
+		},
+		{
+			files: sources.flatMap((s) =>
+				["ts", "js", "tsx", "jsx"].map((e) => `${s}/**/*.${e}`),
+			),
+			rules: {
+				"jsdoc/require-jsdoc": [
+					"warn",
+					{
+						publicOnly: true,
+						contexts: [
+							"ExportNamedDeclaration[declaration]",
+							"ExportDefaultDeclaration",
+						],
+					},
+				],
 			},
 		},
 		...configs,
