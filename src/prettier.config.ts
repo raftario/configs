@@ -1,6 +1,6 @@
 import type { Config } from "prettier"
 
-const config: Config = {
+export default {
 	printWidth: 80,
 	tabWidth: 2,
 	useTabs: true,
@@ -17,6 +17,4 @@ const config: Config = {
 	proseWrap: "never",
 
 	experimentalTernaries: true,
-}
-
-export default config
+} satisfies Config
