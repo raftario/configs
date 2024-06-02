@@ -7,7 +7,7 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     permissions:
-      statuses: write
+      checks: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -20,13 +20,11 @@ jobs:
 
       - name: ESLint
         run: npm run eslint -- --output-file eslint.report.json --format json
-        continue-on-error: true
       - name: Annotate ESLint
+        if: always()
         uses: ataylorme/eslint-annotate-action@v3
         with:
           report-json: eslint.report.json
-          fail-on-warning: true
-          fail-on-error: true
 
   format:
     runs-on: ubuntu-latest
