@@ -35,8 +35,8 @@ export function config(
 			files: ["**/*.ts", "**/*.js", "**/*.tsx", "**/*.jsx"],
 			extends: [
 				js.configs.recommended,
-				...ts.configs.stylisticTypeChecked,
-				...ts.configs.strictTypeChecked,
+				...ts.configs.stylistic,
+				...ts.configs.strict,
 			],
 			plugins: { imports, deprecation, tsdoc, unicorn },
 			languageOptions: {
@@ -147,6 +147,13 @@ export function config(
 				"unicorn/switch-case-braces": "error",
 				"unicorn/throw-new-error": "error",
 			},
+		},
+		{
+			files: ["**/*.ts", "**/*.tsx"],
+			extends: [
+				...ts.configs.stylisticTypeCheckedOnly,
+				...ts.configs.strictTypeCheckedOnly,
+			],
 		},
 		{
 			files: ["**/*.tsx", "**/*.jsx"],
