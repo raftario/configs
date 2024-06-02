@@ -24,6 +24,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout --orphan latest
+          git rm -r --cached .
           git add -f package.json src target tsconfig.json
           git commit -m "latest"
           git push -f origin latest
