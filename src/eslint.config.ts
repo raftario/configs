@@ -17,8 +17,18 @@ const unused = {
 	destructuredArrayIgnorePattern: "^_",
 }
 
+export interface Options {
+	src?: string[]
+	target?: string[]
+	ignore?: string[]
+}
+
 export function config(
-	{ src = ["src", "test"], target = ["target", "dist"], ignore = [] } = {},
+	{
+		src = ["src", "test"],
+		target = ["target", "dist"],
+		ignore = [],
+	}: Options = {},
 	...configs: ts.ConfigWithExtends[]
 ) {
 	return ts.config(
