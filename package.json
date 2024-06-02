@@ -13,7 +13,7 @@
 		"./*": "./*"
 	},
 	"scripts": {
-		"tsc": "tsc --project tsconfig.configs.json",
+		"prepare": "tsc --project tsconfig.configs.json",
 		"eslint": "cross-env ESLINT_USE_FLAT_CONFIG=true eslint --config target/eslint.config.js .",
 		"prettier": "prettier --config target/prettier.config.js ."
 	},
