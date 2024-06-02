@@ -1,0 +1,7 @@
+{
+	"eslint.useFlatConfig": true,
+	"eslint.options": {
+		"overrideConfigFile": "target/eslint.config.js"
+	},
+	"prettier.configPath": "target/prettier.config.js"
+}

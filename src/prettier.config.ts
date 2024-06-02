@@ -1,0 +1,22 @@
+import type { Config } from "prettier"
+
+const config: Config = {
+	printWidth: 80,
+	tabWidth: 2,
+	useTabs: true,
+	semi: false,
+	singleQuote: false,
+	quoteProps: "as-needed",
+	trailingComma: "all",
+	bracketSpacing: true,
+	arrowParens: "always",
+	endOfLine: "lf",
+
+	jsxSingleQuote: false,
+	bracketSameLine: false,
+	proseWrap: "never",
+
+	experimentalTernaries: true,
+}
+
+export default config
