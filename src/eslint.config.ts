@@ -8,22 +8,34 @@ import imports from "eslint-plugin-simple-import-sort"
 import unicorn from "eslint-plugin-unicorn"
 import ts from "typescript-eslint"
 
+/**
+ * Options for the {@link config} function
+ */
 export interface Options {
-	target?: string[]
-	ignore?: string[]
+	targets?: string[]
+	ignores?: string[]
 	root?: string
 }
 
+/**
+ * Generates an opinionated ESLint configuration for TypeScript projects
+ *
+ * @param options
+ * @param options.targets - Target directories for `tsc` output
+ * @param options.ignores - Patterns to ignore
+ * @param options.root - Project root, usually `import.meta.dirname`
+ * @param configs - Additional configs to extend
+ */
 export function config(
-	{ target = ["target", "dist"], ignore = [], root }: Options = {},
+	{ targets = ["target", "dist"], ignores = [], root }: Options = {},
 	...configs: ts.ConfigWithExtends[]
 ) {
 	return ts.config(
 		{
 			ignores: [
 				"node_modules/**",
-				...ignore,
-				...target.map((dir) => {
+				...ignores,
+				...targets.map((dir) => {
 					if (dir.endsWith("/")) {
 						dir = dir.slice(0, -1)
 					}
@@ -51,6 +63,11 @@ export function config(
 			settings: {
 				jsdoc: {
 					mode: "typescript",
+					tagNamePreference: {
+						fires: "emits",
+						property: "prop",
+						template: "typeparam",
+					},
 				},
 			},
 			rules: {
@@ -78,7 +95,7 @@ export function config(
 				"jsdoc/check-alignment": "warn",
 				"jsdoc/check-indentation": "warn",
 				"jsdoc/check-param-names": "error",
-				"jsdoc/check-tag-names": "error",
+				"jsdoc/check-tag-names": ["error", { typed: true }],
 				"jsdoc/empty-tags": "error",
 				"jsdoc/multiline-blocks": "error",
 				"jsdoc/no-blank-blocks": "warn",
@@ -86,9 +103,43 @@ export function config(
 				"jsdoc/no-multi-asterisks": "error",
 				"jsdoc/no-types": "error",
 				"jsdoc/require-asterisk-prefix": "error",
+				"jsdoc/require-jsdoc": [
+					"warn",
+					{
+						publicOnly: true,
+						contexts: [
+							"ExportNamedDeclaration[declaration]",
+							"ExportDefaultDeclaration",
+						],
+					},
+				],
 				"jsdoc/require-returns-check": "error",
 				"jsdoc/require-yields-check": "error",
-				"jsdoc/tag-lines": "warn",
+				"jsdoc/sort-tags": [
+					"warn",
+					{
+						tagSequence: [
+							{ tags: ["summary", "description"] },
+							{
+								tags: [
+									"experimental",
+									"since",
+									"deprecated",
+									"module",
+									"category",
+								],
+							},
+							{ tags: ["typeparam"] },
+							{ tags: ["param", "prop"] },
+							{ tags: ["emits", "throws", "yields", "returns"] },
+							{ tags: ["see"] },
+							{ tags: ["example"] },
+						],
+						linesBetween: 1,
+						reportIntraTagGroupSpacing: true,
+					},
+				],
+				"jsdoc/tag-lines": ["warn", "any", { startLines: 1 }],
 				"jsdoc/valid-types": "error",
 
 				"unicorn/better-regex": "warn",
@@ -188,4 +239,7 @@ export function config(
 	)
 }
 
+/**
+ * A default opinionated ESLint configuration for TypeScript projects
+ */
 export default config()

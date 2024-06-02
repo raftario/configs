@@ -1,5 +1,8 @@
 import type { Config } from "prettier"
 
+/**
+ * A default opinionated Prettier configuration
+ */
 export default {
 	printWidth: 80,
 	tabWidth: 2,
