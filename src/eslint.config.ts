@@ -1,3 +1,6 @@
+import * as fs from "node:fs/promises"
+import * as path from "node:path"
+
 import js from "@eslint/js"
 import prettier from "eslint-config-prettier"
 import deprecation from "eslint-plugin-deprecation"
@@ -8,44 +11,60 @@ import imports from "eslint-plugin-simple-import-sort"
 import unicorn from "eslint-plugin-unicorn"
 import ts from "typescript-eslint"
 
-function dir(path: string) {
-	if (path.endsWith("/")) {
-		path = path.slice(0, -1)
-	}
-	return path
+async function computeIgnores(root = "."): Promise<string[]> {
+	const gitignore = await fs.readFile(path.join(root, ".gitignore"), "utf-8")
+	const ignores = gitignore
+		.split("\n")
+		.filter((i) => i.length > 0)
+		.filter((i) => !i.startsWith("#"))
+
+	return ignores.flatMap((i) => {
+		let prefix = ""
+		if (i.startsWith("!")) {
+			prefix += "!"
+			i = i.slice(1)
+		}
+		if (!i.startsWith("/")) {
+			prefix += "**/"
+		}
+
+		if (i.endsWith("/")) {
+			return [`${prefix}${i}**`]
+		} else {
+			return [`${prefix}${i}`, `${prefix}${i}/**`]
+		}
+	})
+}
+
+function computeDocs(docs: string[]): string[] {
+	const exts = ["ts", "js", "tsx", "jsx"]
+	return docs.flatMap((d) => exts.map((e) => `${d}/**/*.${e}`))
 }
 
 /**
  * Generates an opinionated ESLint configuration for TypeScript projects
  *
  * @param options
- * @param options.sources - Source directories for library code
- * @param options.targets - Target directories for compiler output
- * @param options.ignores - Patterns to ignore
  * @param options.root - Project root, usually `import.meta.dirname`
+ * @param options.ignores - Patterns to ignore, overwrites .gitignore
+ * @param options.docs - Directories where code should be checked for documentation
  * @param configs - Additional configs to extend
  */
-export function config(
+export async function config(
 	{
-		sources = ["src"],
-		targets = ["target", "dist", "out"],
-		ignores = [],
 		root,
+		ignores,
+		docs = ["src"],
 	}: {
-		sources?: string[]
-		targets?: string[]
-		ignores?: string[]
 		root?: string
+		ignores?: string[]
+		docs?: string[]
 	} = {},
 	...configs: ts.ConfigWithExtends[]
 ) {
 	return ts.config(
 		{
-			ignores: [
-				"node_modules/**",
-				...ignores,
-				...targets.map((t) => `${dir(t)}/**`),
-			],
+			ignores: ignores ?? (await computeIgnores(root)),
 		},
 		{
 			files: ["**/*.ts", "**/*.js", "**/*.tsx", "**/*.jsx"],
@@ -229,9 +248,7 @@ export function config(
 			},
 		},
 		{
-			files: sources.flatMap((s) =>
-				["ts", "js", "tsx", "jsx"].map((e) => `${s}/**/*.${e}`),
-			),
+			files: computeDocs(docs),
 			rules: {
 				"jsdoc/require-jsdoc": [
 					"warn",
@@ -254,4 +271,4 @@ export function config(
 /**
  * A default opinionated ESLint configuration for TypeScript projects
  */
-export default config()
+export default await config()
