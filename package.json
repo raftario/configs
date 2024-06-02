@@ -2,7 +2,7 @@
 	"name": "@raftario/configs",
 	"version": "0.0.0",
 	"type": "module",
-	"include": [
+	"files": [
 		"src",
 		"target",
 		"tsconfig.json"
