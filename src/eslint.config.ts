@@ -1,10 +1,10 @@
 import js from "@eslint/js"
 import prettier from "eslint-config-prettier"
 import deprecation from "eslint-plugin-deprecation"
+import jsdoc from "eslint-plugin-jsdoc"
 import a11y from "eslint-plugin-jsx-a11y"
 import hooks from "eslint-plugin-react-hooks"
 import imports from "eslint-plugin-simple-import-sort"
-import tsdoc from "eslint-plugin-tsdoc"
 import unicorn from "eslint-plugin-unicorn"
 import ts from "typescript-eslint"
 
@@ -38,7 +38,7 @@ export function config(
 				...ts.configs.stylistic,
 				...ts.configs.strict,
 			],
-			plugins: { imports, deprecation, tsdoc, unicorn },
+			plugins: { imports, deprecation, jsdoc, unicorn },
 			languageOptions: {
 				parserOptions: {
 					EXPERIMENTAL_useProjectService: {
@@ -48,11 +48,15 @@ export function config(
 					tsconfigRootDir: root,
 				},
 			},
+			settings: {
+				jsdoc: {
+					mode: "typescript",
+				},
+			},
 			rules: {
 				"imports/imports": "warn",
 				"imports/exports": "warn",
 				"deprecation/deprecation": "error",
-				"tsdoc/syntax": "error",
 
 				"@typescript-eslint/consistent-type-imports": [
 					"error",
@@ -70,6 +74,22 @@ export function config(
 						destructuredArrayIgnorePattern: "^_",
 					},
 				],
+
+				"jsdoc/check-alignment": "warn",
+				"jsdoc/check-indentation": "warn",
+				"jsdoc/check-param-names": "error",
+				"jsdoc/check-tag-names": "error",
+				"jsdoc/empty-tags": "error",
+				"jsdoc/multiline-blocks": "error",
+				"jsdoc/no-blank-blocks": "warn",
+				"jsdoc/no-defaults": "error",
+				"jsdoc/no-multi-asterisks": "error",
+				"jsdoc/no-types": "error",
+				"jsdoc/require-asterisk-prefix": "error",
+				"jsdoc/require-returns-check": "error",
+				"jsdoc/require-yields-check": "error",
+				"jsdoc/tag-lines": "warn",
+				"jsdoc/valid-types": "error",
 
 				"unicorn/better-regex": "warn",
 				"unicorn/consistent-empty-array-spread": "error",
