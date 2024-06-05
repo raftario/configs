@@ -1,12 +1,12 @@
 declare module "eslint-config-prettier" {
-	import { type Linter } from "eslint"
+	import type { Linter } from "eslint"
 
 	const config: Linter.FlatConfig
 	export default config
 }
 
 declare module "eslint-plugin-jsx-a11y" {
-	import { type ESLint } from "eslint"
+	import type { ESLint } from "eslint"
 
 	const plugin: ESLint.Plugin & {
 		configs: Record<"recommended" | "strict", ESLint.ConfigData>
@@ -15,7 +15,7 @@ declare module "eslint-plugin-jsx-a11y" {
 }
 
 declare module "eslint-plugin-react-hooks" {
-	import { type ESLint } from "eslint"
+	import type { ESLint } from "eslint"
 
 	const plugin: ESLint.Plugin & {
 		configs: Record<"recommended", ESLint.ConfigData>
@@ -24,7 +24,7 @@ declare module "eslint-plugin-react-hooks" {
 }
 
 declare module "eslint-plugin-unicorn" {
-	import { type ESLint } from "eslint"
+	import type { ESLint } from "eslint"
 
 	const plugin: ESLint.Plugin
 	export default plugin
