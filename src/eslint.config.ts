@@ -11,20 +11,27 @@ import imports from "eslint-plugin-simple-import-sort"
 import unicorn from "eslint-plugin-unicorn"
 import ts from "typescript-eslint"
 
-async function computeIgnores(root = "."): Promise<string[]> {
+async function computeIgnores(
+	root = ".",
+	provided?: string[],
+): Promise<ts.ConfigWithExtends[]> {
+	if (provided?.length) return [{ ignores: provided }]
+
 	const gitignore = await fs.readFile(path.join(root, ".gitignore"), "utf-8")
-	const ignores = gitignore
+	const lines = gitignore
 		.split("\n")
 		.filter((i) => i.length > 0)
 		.filter((i) => !i.startsWith("#"))
 
-	return ignores.flatMap((i) => {
+	const ignores = lines.flatMap((i) => {
 		let prefix = ""
 		if (i.startsWith("!")) {
 			prefix += "!"
 			i = i.slice(1)
 		}
-		if (!i.startsWith("/")) {
+		if (i.startsWith("/")) {
+			i = i.slice(1)
+		} else {
 			prefix += "**/"
 		}
 
@@ -34,11 +41,27 @@ async function computeIgnores(root = "."): Promise<string[]> {
 			return [`${prefix}${i}`, `${prefix}${i}/**`]
 		}
 	})
+	return ignores.length > 0 ? [{ ignores }] : []
 }
 
-function computeDocs(docs: string[]): string[] {
+function computeDocs(docs: string[]): ts.ConfigWithExtends[] {
 	const exts = ["ts", "js", "tsx", "jsx"]
-	return docs.flatMap((d) => exts.map((e) => `${d}/**/*.${e}`))
+	const files = docs.flatMap((d) => exts.map((e) => `${d}/**/*.${e}`))
+
+	const rules: ts.ConfigWithExtends["rules"] = {
+		"jsdoc/require-jsdoc": [
+			"warn",
+			{
+				publicOnly: true,
+				enableFixer: false,
+				contexts: [
+					"ExportNamedDeclaration[declaration]",
+					"ExportDefaultDeclaration",
+				],
+			},
+		],
+	}
+	return files.length > 0 ? [{ files, rules }] : []
 }
 
 /**
@@ -63,9 +86,7 @@ export async function config(
 	...configs: ts.ConfigWithExtends[]
 ) {
 	return ts.config(
-		{
-			ignores: ignores ?? (await computeIgnores(root)),
-		},
+		...(await computeIgnores(root, ignores)),
 		{
 			files: ["**/*.ts", "**/*.js", "**/*.tsx", "**/*.jsx"],
 			extends: [
@@ -113,6 +134,10 @@ export async function config(
 						argsIgnorePattern: "^_",
 						destructuredArrayIgnorePattern: "^_",
 					},
+				],
+				"@typescript-eslint/restrict-template-expressions": [
+					"error",
+					{ allowNumber: true },
 				],
 
 				"jsdoc/check-alignment": "warn",
@@ -217,7 +242,6 @@ export async function config(
 				"unicorn/prefer-regexp-test": "error",
 				"unicorn/prefer-set-has": "warn",
 				"unicorn/prefer-set-size": "error",
-				"unicorn/prefer-spread": "error",
 				"unicorn/prefer-string-raw": "warn",
 				"unicorn/prefer-string-replace-all": "warn",
 				"unicorn/prefer-string-slice": "error",
@@ -247,22 +271,7 @@ export async function config(
 				...hooks.configs.recommended.rules,
 			},
 		},
-		{
-			files: computeDocs(docs),
-			rules: {
-				"jsdoc/require-jsdoc": [
-					"warn",
-					{
-						publicOnly: true,
-						enableFixer: false,
-						contexts: [
-							"ExportNamedDeclaration[declaration]",
-							"ExportDefaultDeclaration",
-						],
-					},
-				],
-			},
-		},
+		...computeDocs(docs),
 		...configs,
 		prettier,
 	)
