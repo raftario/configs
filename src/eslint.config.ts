@@ -119,10 +119,6 @@ export async function config(
 				"imports/exports": "warn",
 				"deprecation/deprecation": "error",
 
-				"@typescript-eslint/consistent-type-imports": [
-					"error",
-					{ prefer: "type-imports", fixStyle: "separate-type-imports" },
-				],
 				"@typescript-eslint/no-non-null-assertion": "off",
 				"@typescript-eslint/no-unused-vars": [
 					"warn",
@@ -134,10 +130,6 @@ export async function config(
 						argsIgnorePattern: "^_",
 						destructuredArrayIgnorePattern: "^_",
 					},
-				],
-				"@typescript-eslint/restrict-template-expressions": [
-					"error",
-					{ allowNumber: true },
 				],
 
 				"jsdoc/check-alignment": "warn",
@@ -262,6 +254,16 @@ export async function config(
 				...ts.configs.stylisticTypeCheckedOnly,
 				...ts.configs.strictTypeCheckedOnly,
 			],
+			rules: {
+				"@typescript-eslint/consistent-type-imports": [
+					"error",
+					{ prefer: "type-imports", fixStyle: "separate-type-imports" },
+				],
+				"@typescript-eslint/restrict-template-expressions": [
+					"error",
+					{ allowNumber: true },
+				],
+			},
 		},
 		{
 			files: ["**/*.tsx", "**/*.jsx"],
