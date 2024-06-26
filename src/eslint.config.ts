@@ -268,9 +268,9 @@ export async function config(
 		},
 		{
 			files: ["**/*.tsx", "**/*.jsx"],
-			plugins: { "jsx-a11y": a11y, "react-hooks": hooks },
+			extends: [a11y.flatConfigs.strict],
+			plugins: { "react-hooks": hooks },
 			rules: {
-				...a11y.configs.strict.rules,
 				...hooks.configs.recommended.rules,
 			},
 		},
