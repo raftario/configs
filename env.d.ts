@@ -6,10 +6,11 @@ declare module "eslint-config-prettier" {
 }
 
 declare module "eslint-plugin-jsx-a11y" {
-	import type { ESLint } from "eslint"
+	import type { ESLint, Linter } from "eslint"
 
 	const plugin: ESLint.Plugin & {
 		configs: Record<"recommended" | "strict", ESLint.ConfigData>
+		flatConfigs: Record<"recommended" | "strict", Linter.FlatConfig>
 	}
 	export default plugin
 }
