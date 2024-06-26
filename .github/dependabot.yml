@@ -5,21 +5,14 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    versioning-strategy: increase-if-necessary
+    versioning-strategy: increase
     open-pull-requests-limit: 8
 
     groups:
       dependencies:
         dependency-type: production
-        update-types:
-          - minor
-          - patch
-
       dev-dependencies:
         dependency-type: development
-        update-types:
-          - minor
-          - patch
 
   - package-ecosystem: github-actions
     directory: "/"
