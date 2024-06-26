@@ -188,6 +188,7 @@ export async function config(
 				"unicorn/no-for-loop": "warn",
 				"unicorn/no-instanceof-array": "error",
 				"unicorn/no-lonely-if": "warn",
+				"unicorn/no-negation-in-equality-check": "error",
 				"unicorn/no-new-array": "warn",
 				"unicorn/no-object-as-default-parameter": "error",
 				"unicorn/no-single-promise-in-promise-methods": "error",
