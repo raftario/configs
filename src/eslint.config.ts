@@ -17,7 +17,13 @@ async function computeIgnores(
 ): Promise<ts.ConfigWithExtends[]> {
 	if (provided?.length) return [{ ignores: provided }]
 
-	const gitignore = await fs.readFile(path.join(root, ".gitignore"), "utf-8")
+	let gitignore: string
+	try {
+		gitignore = await fs.readFile(path.join(root, ".gitignore"), "utf-8")
+	} catch {
+		return []
+	}
+
 	const lines = gitignore
 		.split("\n")
 		.filter((i) => i.length > 0)
@@ -187,6 +193,7 @@ export async function config(
 				"unicorn/no-console-spaces": "error",
 				"unicorn/no-for-loop": "warn",
 				"unicorn/no-instanceof-array": "error",
+				"unicorn/no-length-as-slice-end": "error",
 				"unicorn/no-lonely-if": "warn",
 				"unicorn/no-negation-in-equality-check": "error",
 				"unicorn/no-new-array": "warn",
