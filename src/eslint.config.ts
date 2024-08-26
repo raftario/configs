@@ -1,9 +1,12 @@
 import * as fs from "node:fs/promises"
 import * as path from "node:path"
 
+import {
+	convertIgnorePatternToMinimatch,
+	fixupPluginRules,
+} from "@eslint/compat"
 import js from "@eslint/js"
 import prettier from "eslint-config-prettier"
-import deprecation from "eslint-plugin-deprecation"
 import jsdoc from "eslint-plugin-jsdoc"
 import a11y from "eslint-plugin-jsx-a11y"
 import hooks from "eslint-plugin-react-hooks"
@@ -29,24 +32,7 @@ async function computeIgnores(
 		.filter((i) => i.length > 0)
 		.filter((i) => !i.startsWith("#"))
 
-	const ignores = lines.flatMap((i) => {
-		let prefix = ""
-		if (i.startsWith("!")) {
-			prefix += "!"
-			i = i.slice(1)
-		}
-		if (i.startsWith("/")) {
-			i = i.slice(1)
-		} else {
-			prefix += "**/"
-		}
-
-		if (i.endsWith("/")) {
-			return [`${prefix}${i}**`]
-		} else {
-			return [`${prefix}${i}`, `${prefix}${i}/**`]
-		}
-	})
+	const ignores = lines.map(convertIgnorePatternToMinimatch)
 	return ignores.length > 0 ? [{ ignores }] : []
 }
 
@@ -77,17 +63,20 @@ function computeDocs(docs: string[]): ts.ConfigWithExtends[] {
  * @param options.root - Project root, usually `import.meta.dirname`
  * @param options.ignores - Patterns to ignore, overwrites .gitignore
  * @param options.docs - Directories where code should be checked for documentation
+ * @param options.freestanding - Files that should be checked without being included in a tsconfig
  * @param configs - Additional configs to extend
  */
 export async function config(
 	{
 		root,
 		ignores,
-		docs = ["src"],
+		docs = [],
+		freestanding = ["*.js"],
 	}: {
 		root?: string
 		ignores?: string[]
 		docs?: string[]
+		freestanding?: string[]
 	} = {},
 	...configs: ts.ConfigWithExtends[]
 ) {
@@ -100,13 +89,12 @@ export async function config(
 				...ts.configs.stylistic,
 				...ts.configs.strict,
 			],
-			plugins: { imports, deprecation, jsdoc, unicorn },
+			plugins: { imports, jsdoc, unicorn },
 			languageOptions: {
 				parserOptions: {
-					EXPERIMENTAL_useProjectService: {
-						defaultProject: "./tsconfig.json",
-						allowDefaultProjectForFiles: ["./*.js"],
-					} as unknown as boolean,
+					projectService: {
+						allowDefaultProject: freestanding,
+					},
 					tsconfigRootDir: root,
 				},
 			},
@@ -123,7 +111,6 @@ export async function config(
 			rules: {
 				"imports/imports": "warn",
 				"imports/exports": "warn",
-				"deprecation/deprecation": "error",
 
 				"@typescript-eslint/no-non-null-assertion": "off",
 				"@typescript-eslint/no-unused-vars": [
@@ -143,6 +130,7 @@ export async function config(
 				"jsdoc/check-param-names": "error",
 				"jsdoc/check-tag-names": ["error", { typed: true }],
 				"jsdoc/empty-tags": "error",
+				"jsdoc/lines-before-block": "warn",
 				"jsdoc/multiline-blocks": "error",
 				"jsdoc/no-blank-blocks": "warn",
 				"jsdoc/no-defaults": "error",
@@ -276,7 +264,7 @@ export async function config(
 		{
 			files: ["**/*.tsx", "**/*.jsx"],
 			extends: [a11y.flatConfigs.strict],
-			plugins: { "react-hooks": hooks },
+			plugins: { "react-hooks": fixupPluginRules(hooks) },
 			rules: {
 				...hooks.configs.recommended.rules,
 			},

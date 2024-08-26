@@ -14,32 +14,39 @@
 	},
 	"scripts": {
 		"prepare": "tsc --project tsconfig.configs.json",
-		"eslint": "cross-env ESLINT_USE_FLAT_CONFIG=true eslint --config target/eslint.config.js .",
+		"eslint": "eslint --config target/eslint.config.js .",
 		"prettier": "prettier --config target/prettier.config.js ."
 	},
 	"peerDependencies": {
-		"eslint": "^8.57",
+		"eslint": "^9.0",
 		"prettier": "^3.1",
-		"typescript": ">=4.9"
+		"typescript": ">=4.9.0"
 	},
 	"dependencies": {
-		"@eslint/js": "^8.57",
+		"@eslint/compat": "^1.1",
+		"@eslint/js": "^9.9",
 		"eslint-config-prettier": "^9.1",
-		"eslint-plugin-deprecation": "^3.0",
-		"eslint-plugin-jsdoc": "^48.11",
+		"eslint-plugin-jsdoc": "^50.2",
 		"eslint-plugin-jsx-a11y": "^6.9",
 		"eslint-plugin-react-hooks": "^4.6",
 		"eslint-plugin-simple-import-sort": "^12.1",
 		"eslint-plugin-unicorn": "^55.0",
-		"typescript-eslint": "^7.14"
+		"typescript-eslint": "^8.3"
 	},
 	"devDependencies": {
-		"@types/eslint": "^8",
-		"@types/eslint__js": "^8",
+		"@types/eslint": "*",
+		"@types/eslint__js": "*",
 		"@types/node": "*",
-		"cross-env": "^7.0",
-		"eslint": "^8.57",
+		"eslint": "^9.9",
 		"prettier": "^3.3",
 		"typescript": "~5.5"
+	},
+	"overrides": {
+		"eslint-plugin-jsx-a11y": {
+			"eslint": "$eslint"
+		},
+		"eslint-plugin-react-hooks": {
+			"eslint": "$eslint"
+		}
 	}
 }
