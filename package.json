@@ -37,7 +37,7 @@
 		"@types/eslint": "*",
 		"@types/eslint__js": "*",
 		"@types/node": "*",
-		"eslint": "^9.10",
+		"eslint": "^9.12",
 		"prettier": "^3.3",
 		"typescript": "~5.6"
 	},
