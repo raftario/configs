@@ -1,14 +1,14 @@
 import * as fs from "node:fs/promises"
 import * as path from "node:path"
 
-import {
-	convertIgnorePatternToMinimatch,
-	fixupPluginRules,
-} from "@eslint/compat"
+import { convertIgnorePatternToMinimatch } from "@eslint/compat"
 import js from "@eslint/js"
+import type Next from "@next/eslint-plugin-next"
+import type { ESLint, Linter } from "eslint"
 import prettier from "eslint-config-prettier"
 import jsdoc from "eslint-plugin-jsdoc"
 import a11y from "eslint-plugin-jsx-a11y"
+import react from "eslint-plugin-react"
 import hooks from "eslint-plugin-react-hooks"
 import imports from "eslint-plugin-simple-import-sort"
 import unicorn from "eslint-plugin-unicorn"
@@ -40,7 +40,7 @@ function computeDocs(docs: string[]): ts.ConfigWithExtends[] {
 	const exts = ["ts", "js", "tsx", "jsx"]
 	const files = docs.flatMap((d) => exts.map((e) => `${d}/**/*.${e}`))
 
-	const rules: ts.ConfigWithExtends["rules"] = {
+	const rules: Linter.RulesRecord = {
 		"jsdoc/require-jsdoc": [
 			"warn",
 			{
@@ -54,6 +54,27 @@ function computeDocs(docs: string[]): ts.ConfigWithExtends[] {
 		],
 	}
 	return files.length > 0 ? [{ files, rules }] : []
+}
+
+async function computeNext(): Promise<ts.ConfigWithExtends[]> {
+	let next: typeof Next
+	try {
+		const imported = await import("@next/eslint-plugin-next")
+		next = imported.default
+	} catch {
+		return []
+	}
+
+	return [
+		{
+			files: ["**/*.ts", "**/*.js", "**/*.tsx", "**/*.jsx"],
+			plugins: { "@next/next": next },
+			rules: {
+				...next.configs.recommended.rules,
+				...next.configs["core-web-vitals"].rules,
+			},
+		},
+	]
 }
 
 /**
@@ -168,6 +189,7 @@ export async function config(
 
 				"unicorn/better-regex": "warn",
 				"unicorn/consistent-empty-array-spread": "error",
+				"unicorn/consistent-existence-index-check": "error",
 				"unicorn/consistent-function-scoping": "warn",
 				"unicorn/custom-error-definition": "error",
 				"unicorn/explicit-length-check": "error",
@@ -214,9 +236,11 @@ export async function config(
 				"unicorn/prefer-dom-node-remove": "warn",
 				"unicorn/prefer-event-target": "error",
 				"unicorn/prefer-export-from": "error",
+				"unicorn/prefer-global-this": "error",
 				"unicorn/prefer-includes": "error",
 				"unicorn/prefer-keyboard-event-key": "error",
 				"unicorn/prefer-logical-operator-over-ternary": "warn",
+				"unicorn/prefer-math-min-max": "error",
 				"unicorn/prefer-modern-dom-apis": "error",
 				"unicorn/prefer-modern-math-apis": "error",
 				"unicorn/prefer-native-coercion-functions": "error",
@@ -253,8 +277,13 @@ export async function config(
 			rules: {
 				"@typescript-eslint/consistent-type-imports": [
 					"error",
-					{ prefer: "type-imports", fixStyle: "separate-type-imports" },
+					{
+						prefer: "type-imports",
+						fixStyle: "separate-type-imports",
+						disallowTypeAnnotations: false,
+					},
 				],
+				"@typescript-eslint/no-deprecated": "warn",
 				"@typescript-eslint/restrict-template-expressions": [
 					"error",
 					{ allowNumber: true },
@@ -264,11 +293,14 @@ export async function config(
 		{
 			files: ["**/*.tsx", "**/*.jsx"],
 			extends: [a11y.flatConfigs.strict],
-			plugins: { "react-hooks": fixupPluginRules(hooks) },
+			plugins: { react: react as ESLint.Plugin, "react-hooks": hooks },
 			rules: {
+				...(react.configs.recommended.rules as Linter.RulesRecord),
+				...(react.configs["jsx-runtime"].rules as Linter.RulesRecord),
 				...hooks.configs.recommended.rules,
 			},
 		},
+		...(await computeNext()),
 		...computeDocs(docs),
 		...configs,
 		prettier,

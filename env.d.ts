@@ -1,3 +1,12 @@
+declare module "@next/eslint-plugin-next" {
+	import type { ESLint } from "eslint"
+
+	const plugin: ESLint.Plugin & {
+		configs: Record<"recommended" | "core-web-vitals", ESLint.ConfigData>
+	}
+	export default plugin
+}
+
 declare module "eslint-config-prettier" {
 	import type { Linter } from "eslint"
 
