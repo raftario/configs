@@ -44,8 +44,8 @@
 		"@types/eslint": "*",
 		"@types/eslint__js": "*",
 		"@types/node": "*",
-		"eslint": "^9.13",
-		"prettier": "^3.3",
-		"typescript": "~5.6"
+		"eslint": "^9.16",
+		"prettier": "^3.4",
+		"typescript": "~5.7"
 	}
 }
