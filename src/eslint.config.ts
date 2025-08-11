@@ -4,7 +4,7 @@ import * as path from "node:path"
 import { convertIgnorePatternToMinimatch } from "@eslint/compat"
 import js from "@eslint/js"
 import type Next from "@next/eslint-plugin-next"
-import type { ESLint, Linter } from "eslint"
+import type { Linter } from "eslint"
 import prettier from "eslint-config-prettier/flat"
 import jsdoc from "eslint-plugin-jsdoc"
 import a11y from "eslint-plugin-jsx-a11y"
@@ -327,10 +327,15 @@ export async function config(
 		{
 			files: ["**/*.tsx", "**/*.jsx"],
 			extends: [a11y.flatConfigs.strict],
-			plugins: { react: react as ESLint.Plugin, "react-hooks": hooks },
+			plugins: { react: react, "react-hooks": hooks },
+			settings: {
+				react: {
+					version: "detect",
+				},
+			},
 			rules: {
-				...(react.configs.recommended.rules as Linter.RulesRecord),
-				...(react.configs["jsx-runtime"].rules as Linter.RulesRecord),
+				...react.configs.recommended.rules,
+				...react.configs["jsx-runtime"].rules,
 				...hooks.configs.recommended.rules,
 			},
 		},
