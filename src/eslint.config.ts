@@ -5,7 +5,7 @@ import { convertIgnorePatternToMinimatch } from "@eslint/compat"
 import js from "@eslint/js"
 import type Next from "@next/eslint-plugin-next"
 import type { ESLint, Linter } from "eslint"
-import prettier from "eslint-config-prettier"
+import prettier from "eslint-config-prettier/flat"
 import jsdoc from "eslint-plugin-jsdoc"
 import a11y from "eslint-plugin-jsx-a11y"
 import react from "eslint-plugin-react"
@@ -19,18 +19,45 @@ async function computeIgnores(
 	provided?: string[],
 ): Promise<ts.ConfigWithExtends[]> {
 	if (provided?.length) return [{ ignores: provided }]
+	root = path.normalize(root)
 
-	let gitignore: string
-	try {
-		gitignore = await fs.readFile(path.join(root, ".gitignore"), "utf-8")
-	} catch {
-		return []
+	let dir = root
+	let depth = 0
+	const lines: string[] = []
+
+	for (;;) {
+		try {
+			const gitignore = await fs.readFile(path.join(dir, ".gitignore"), "utf-8")
+
+			lines.push(
+				...gitignore
+					.split(/\r?\n/)
+					.filter((i) => i.trim().length > 0)
+					.filter((i) => !i.startsWith("#"))
+					.map((i) => {
+						i = i.trimEnd()
+
+						const slash = i.indexOf("/")
+						if (slash !== -1 && slash < i.length - 1) {
+							i = i.replace(/^(!)?/, `$1${"../".repeat(depth)}`)
+						}
+
+						return i
+					}),
+			)
+		} catch {
+			// either no .gitignore or we can't parse it
+			// still keep looking in ancestors
+		}
+
+		const next = path.dirname(dir)
+		if (next === dir) {
+			break
+		} else {
+			dir = next
+			depth += 1
+		}
 	}
-
-	const lines = gitignore
-		.split("\n")
-		.filter((i) => i.length > 0)
-		.filter((i) => !i.startsWith("#"))
 
 	const ignores = lines.map(convertIgnorePatternToMinimatch)
 	return ignores.length > 0 ? [{ ignores }] : []
@@ -68,11 +95,7 @@ async function computeNext(): Promise<ts.ConfigWithExtends[]> {
 	return [
 		{
 			files: ["**/*.ts", "**/*.js", "**/*.tsx", "**/*.jsx"],
-			plugins: { "@next/next": next },
-			rules: {
-				...next.configs.recommended.rules,
-				...next.configs["core-web-vitals"].rules,
-			},
+			extends: [next.flatConfig.recommended as ts.ConfigWithExtends],
 		},
 	]
 }
@@ -100,7 +123,7 @@ export async function config(
 		freestanding?: string[]
 	} = {},
 	...configs: ts.ConfigWithExtends[]
-) {
+): Promise<ts.ConfigArray> {
 	return ts.config(
 		...(await computeIgnores(root, ignores)),
 		{
@@ -188,6 +211,8 @@ export async function config(
 				"jsdoc/valid-types": "error",
 
 				"unicorn/better-regex": "warn",
+				"unicorn/consistent-assert": "error",
+				"unicorn/consistent-date-clone": "error",
 				"unicorn/consistent-empty-array-spread": "error",
 				"unicorn/consistent-existence-index-check": "error",
 				"unicorn/consistent-function-scoping": "warn",
@@ -195,25 +220,30 @@ export async function config(
 				"unicorn/explicit-length-check": "error",
 				"unicorn/filename-case": "warn",
 				"unicorn/new-for-builtins": "error",
+				"unicorn/no-accessor-recursion": "error",
 				"unicorn/no-array-for-each": "warn",
 				"unicorn/no-array-method-this-argument": "error",
-				"unicorn/no-array-push-push": "warn",
+				"unicorn/no-array-reverse": "error",
 				"unicorn/no-await-expression-member": "error",
 				"unicorn/no-await-in-promise-methods": "error",
 				"unicorn/no-console-spaces": "error",
 				"unicorn/no-for-loop": "warn",
-				"unicorn/no-instanceof-array": "error",
-				"unicorn/no-length-as-slice-end": "error",
+				"unicorn/no-instanceof-builtins": "error",
 				"unicorn/no-lonely-if": "warn",
+				"unicorn/no-named-default": "warn",
 				"unicorn/no-negation-in-equality-check": "error",
 				"unicorn/no-new-array": "warn",
 				"unicorn/no-object-as-default-parameter": "error",
 				"unicorn/no-single-promise-in-promise-methods": "error",
 				"unicorn/no-static-only-class": "error",
 				"unicorn/no-typeof-undefined": "error",
+				"unicorn/no-unnecessary-array-flat-depth": "error",
+				"unicorn/no-unnecessary-array-splice-count": "error",
 				"unicorn/no-unnecessary-polyfills": "error",
+				"unicorn/no-unnecessary-slice-end": "error",
 				"unicorn/no-unreadable-array-destructuring": "warn",
 				"unicorn/no-unreadable-iife": "error",
+				"unicorn/no-useless-error-capture-stack-trace": "error",
 				"unicorn/no-useless-fallback-in-spread": "error",
 				"unicorn/no-useless-length-check": "error",
 				"unicorn/no-useless-promise-resolve-reject": "error",
@@ -228,6 +258,7 @@ export async function config(
 				"unicorn/prefer-array-some": "error",
 				"unicorn/prefer-at": "error",
 				"unicorn/prefer-blob-reading-methods": "error",
+				"unicorn/prefer-class-fields": "error",
 				"unicorn/prefer-code-point": "warn",
 				"unicorn/prefer-date-now": "error",
 				"unicorn/prefer-default-parameters": "error",
@@ -237,6 +268,7 @@ export async function config(
 				"unicorn/prefer-event-target": "error",
 				"unicorn/prefer-export-from": "error",
 				"unicorn/prefer-global-this": "error",
+				"unicorn/prefer-import-meta-properties": "warn",
 				"unicorn/prefer-includes": "error",
 				"unicorn/prefer-keyboard-event-key": "error",
 				"unicorn/prefer-logical-operator-over-ternary": "warn",
@@ -254,6 +286,7 @@ export async function config(
 				"unicorn/prefer-regexp-test": "error",
 				"unicorn/prefer-set-has": "warn",
 				"unicorn/prefer-set-size": "error",
+				"unicorn/prefer-single-call": "warn",
 				"unicorn/prefer-string-raw": "warn",
 				"unicorn/prefer-string-replace-all": "warn",
 				"unicorn/prefer-string-slice": "error",
@@ -263,6 +296,7 @@ export async function config(
 				"unicorn/prefer-switch": "error",
 				"unicorn/prefer-type-error": "error",
 				"unicorn/require-array-join-separator": "error",
+				"unicorn/require-module-specifiers": "error",
 				"unicorn/require-number-to-fixed-digits-argument": "error",
 				"unicorn/switch-case-braces": "error",
 				"unicorn/throw-new-error": "error",
@@ -310,4 +344,5 @@ export async function config(
 /**
  * A default opinionated ESLint configuration for TypeScript projects
  */
-export default await config()
+const defaults: ts.ConfigArray = await config()
+export default defaults
