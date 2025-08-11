@@ -20,4 +20,5 @@ export default {
 	proseWrap: "never",
 
 	experimentalTernaries: true,
+	experimentalOperatorPosition: "start",
 } satisfies Config
