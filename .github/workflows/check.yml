@@ -10,14 +10,17 @@ jobs:
       checks: write
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: npm
-      - run: npm ci
+          cache: pnpm
+      - run: pnpm install
 
       - name: ESLint
-        run: npm run eslint . -- --output-file eslint.report.json --format json
+        run: pnpm eslint . --output-file eslint.report.json --format json
       - name: Annotate ESLint
         if: always()
         uses: ataylorme/eslint-annotate-action@v3
@@ -32,8 +35,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: npm
-      - run: npm ci
+          cache: pnpm
+      - run: pnpm install
 
       - name: Prettier
-        run: npm run prettier -- --check
+        run: pnpm prettier . --check
