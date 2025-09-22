@@ -44,7 +44,7 @@
 	"devDependencies": {
 		"@types/node": "*",
 		"@types/eslint-plugin-jsx-a11y": "^6.10",
-		"eslint": "^9.13",
+		"eslint": "^9.36",
 		"prettier": "^3.6",
 		"typescript": "~5.9"
 	}
